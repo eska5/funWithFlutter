@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const MyApp());
@@ -50,6 +52,60 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future sendToServer() async {
+    try{
+      //var request = http.MultipartRequest("POST", Uri.parse("https://gourmet.hopto.org:5000/meals"));
+      //request.fields["mealName"] = jsonEncode("XD");
+      //create multipart using filepath, string or bytes
+        //print(request.url.host); // 10.0.0.1
+        //print(request.url.port); // 6100
+        //print(request.url.path); // get_status
+        //request.fields["mealPhoto"] = jsonEncode( image!.toString() );
+      //var pic = await http.MultipartFile.fromPath("mealPhoto", image!.path );
+      //add multipart to request
+      //request.files.add(pic);
+
+      //Map<String, String> requestHeaders = {
+       //'Content-type': 'application/json',
+       //'Accept': 'application/json'
+      //};
+
+      //request.headers.addAll(requestHeaders);
+
+      //var response = await request.send();
+
+      //Get the response from the server
+      //var responseData = await response.stream.toBytes();
+      //var responseString = String.fromCharCodes(responseData);
+
+        final uri = Uri.parse("https://gourmet.hopto.org:5000/meals");
+        final headers = {'Content-Type': 'application/json'};
+        Map<String, dynamic> body = {'mealName': "super", 'mealPhoto': image!.toString()};
+        String jsonBody = json.encode(body);
+        final encoding = Encoding.getByName('utf-8');
+
+  var response = await http.post(
+    uri,
+    headers: headers,
+    body: jsonBody,
+    encoding: encoding,
+  );
+
+  int statusCode = response.statusCode;
+  String responseBody = response.body;
+
+
+
+      print(responseBody);
+      print(statusCode);
+
+      print("OK");
+
+  } on PlatformException catch (e) {
+      print('Failed to send to server: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,7 +150,7 @@ class _MyHomePageState extends State<MyHomePage> {
             buildButton(
               title: 'Submit',
               icon: Icons.send,
-              onClicked: () {},
+              onClicked: () => sendToServer(),
             ),
           ],
         ),
