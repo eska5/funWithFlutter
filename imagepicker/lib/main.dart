@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,12 +17,16 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     return MaterialApp(
       title: 'Flutter photoReader',
       theme: ThemeData(
         primarySwatch: Colors.amber,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'The Gourmet'),
     );
   }
 }
@@ -39,10 +44,11 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   File? image;
+  TextEditingController inputText = new TextEditingController();
 
   Future pickImage(ImageSource source) async {
     try {
-      final image = await ImagePicker().pickImage(source: source);
+      final image = await ImagePicker().pickImage(source: source, imageQuality: 10);
       if (image == null) return;
 
       final imageTemporary = File(image.path);
@@ -54,35 +60,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future sendToServer() async {
     try{
-      //var request = http.MultipartRequest("POST", Uri.parse("https://gourmet.hopto.org:5000/meals"));
-      //request.fields["mealName"] = jsonEncode("XD");
-      //create multipart using filepath, string or bytes
-        //print(request.url.host); // 10.0.0.1
-        //print(request.url.port); // 6100
-        //print(request.url.path); // get_status
-        //request.fields["mealPhoto"] = jsonEncode( image!.toString() );
-      //var pic = await http.MultipartFile.fromPath("mealPhoto", image!.path );
-      //add multipart to request
-      //request.files.add(pic);
-
-      //Map<String, String> requestHeaders = {
-       //'Content-type': 'application/json',
-       //'Accept': 'application/json'
-      //};
-
-      //request.headers.addAll(requestHeaders);
-
-      //var response = await request.send();
-
-      //Get the response from the server
-      //var responseData = await response.stream.toBytes();
-      //var responseString = String.fromCharCodes(responseData);
+      
 
         final uri = Uri.parse("https://gourmet.hopto.org:5000/meals");
         final headers = {'Content-Type': 'application/json'};
-        Map<String, dynamic> body = {'mealName': "super", 'mealPhoto': image!.toString()};
+
+
+        final bytes = File(image!.path).readAsBytesSync();
+        String base64Image = base64Encode(bytes);
+
+
+        Map<String, dynamic> body = {'mealName': inputText.text.toString(), 'mealPhoto': base64Image};
         String jsonBody = json.encode(body);
         final encoding = Encoding.getByName('utf-8');
+
+        
 
   var response = await http.post(
     uri,
@@ -106,6 +98,55 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+
+  Future categorizeThePhoto() async {
+    try{
+      
+
+        final uri = Uri.parse("https://gourmet.hopto.org:5000/model");
+        final headers = {'Content-Type': 'application/json'};
+
+
+        final bytes = File(image!.path).readAsBytesSync();
+        String base64Image = base64Encode(bytes);
+
+
+        Map<String, dynamic> body = { 'mealPhoto': base64Image};
+        String jsonBody = json.encode(body);
+        final encoding = Encoding.getByName('utf-8');
+
+        
+
+  var response = await http.post(
+    uri,
+    headers: headers,
+    body: jsonBody,
+    encoding: encoding,
+  );
+
+  int statusCode = response.statusCode;
+  String responseBody = response.body;
+
+
+
+      print(responseBody);
+      print(statusCode);
+
+      print("OK");
+
+  } on PlatformException catch (e) {
+      print('Failed to send to server: $e');
+    }
+  }
+
+
+
+
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,11 +158,12 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             image != null 
-            ? ClipOval(
+            ? ClipRRect(
+              borderRadius: BorderRadius.circular(25),
               child: Image.file(
                 image!,
-                width: 160,
-                height: 160,
+                width: 240,
+                height: 240,
                 fit: BoxFit.cover,
               ),
             )
@@ -134,6 +176,59 @@ class _MyHomePageState extends State<MyHomePage> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+
+
+             Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: TypeAheadField<Suggestions?>(
+              hideSuggestionsOnKeyboardHide: true,
+              debounceDuration: Duration(milliseconds: 500),
+              textFieldConfiguration: TextFieldConfiguration(
+                decoration: InputDecoration(
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(),
+                  hintText: 'podaj nazwe potrawy',
+                ),
+                controller: this.inputText,
+              ),
+
+
+              suggestionsCallback: SuggestionsApi.getSuggestionsSuggestions,
+              itemBuilder: (context, Suggestions? suggestion) {
+                final hint = suggestion;
+                return ListTile(
+                  title: Text(hint!.suggest.toString()),
+                );
+              },
+              noItemsFoundBuilder: (context) => Container(
+                height: 40,
+                child: Center(
+                  child: Text(
+                    'Brak potraw w bazie',
+                  ),
+                ),
+              ),
+              
+              onSuggestionSelected: (Suggestions? suggestion){
+                final potrawa = suggestion!;
+                inputText.text = potrawa.suggest;
+                ScaffoldMessenger.of(context)
+                ..removeCurrentSnackBar()
+                ..showSnackBar(SnackBar(content: Text('Podano potrawe: ${potrawa.suggest}'),
+                ));
+                 child: TextField(
+                controller: inputText,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'podaj nazwe potrawy',
+                  ),  
+                );
+              },
+              ),
+            ),
+
+
+
             const SizedBox(height: 48), 
             buildButton(
               title: 'Pick Gallery',
@@ -151,6 +246,12 @@ class _MyHomePageState extends State<MyHomePage> {
               title: 'Submit',
               icon: Icons.send,
               onClicked: () => sendToServer(),
+            ),
+             const SizedBox(height: 24), 
+            buildButton(
+              title: 'Recognize the photo',
+              icon: Icons.cookie_sharp,
+              onClicked: () => categorizeThePhoto(),
             ),
           ],
         ),
@@ -178,4 +279,38 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         onPressed: onClicked,
       );
+}
+
+class SuggestionsApi {
+
+  static Future <List<Suggestions>> getSuggestionsSuggestions(String query) async{
+    final url = Uri.parse('https://gourmet.hopto.org:5000/suggestions');
+    final response = await http.get(url);
+
+    if(response.statusCode == 200){
+      final List suggestions = json.decode( response.body );
+
+      return suggestions.map((json) => Suggestions.fromJson(json)).where((suggestion) {
+        final suggestionLower =suggestion.suggest.toString().toLowerCase();
+        final queryLower =query.toString().toLowerCase();
+
+        return suggestionLower.contains(queryLower);
+      } ).toList();
+    } else {
+      throw Exception();
+    }
+  }
+
+}
+
+class Suggestions {
+  String suggest = "";
+
+  Suggestions({
+    required this.suggest,
+  });
+
+  static Suggestions fromJson(String json) => Suggestions(
+    suggest: json,
+  );
 }
