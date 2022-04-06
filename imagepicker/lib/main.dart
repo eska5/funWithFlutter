@@ -103,7 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
     try{
       
 
-        final uri = Uri.parse("https://gourmet.hopto.org:5000/model");
+        final uri = Uri.parse("https://gourmet.hopto.org:5000/classify");
         final headers = {'Content-Type': 'application/json'};
 
 
