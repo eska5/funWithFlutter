@@ -45,6 +45,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   File? image;
   TextEditingController inputText = new TextEditingController();
+  TextEditingController recognizedMeal = new TextEditingController();
 
   Future pickImage(ImageSource source) async {
     try {
@@ -130,6 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
       print(responseBody);
+      recognizedMeal.text = json.decode( response.body );
       print(statusCode);
 
       print("OK");
@@ -228,6 +230,13 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
 
 
+            TextField(
+                controller: recognizedMeal,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Tu bedzie ODP ',
+                  ),  
+                ),
 
             const SizedBox(height: 48), 
             buildButton(
