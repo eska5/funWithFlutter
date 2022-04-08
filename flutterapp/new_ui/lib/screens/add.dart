@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:new_ui/components/button.dart';
 import 'package:new_ui/components/suggestions.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:new_ui/functions/func.dart';
 
 class AddImage extends StatefulWidget {
   AddImage({Key? key}) : super(key: key);
@@ -72,7 +73,7 @@ class _AddImageState extends State<AddImage> {
       child: Column(
         children: [
           SizedBox(
-            height: 45,
+            height: smallSreen() ? 35 : 80,
           ),
           image != null
               ? ClipRRect(
@@ -86,7 +87,7 @@ class _AddImageState extends State<AddImage> {
                 )
               : Image.asset('assets/dish.png', width: 200, height: 200),
           SizedBox(
-            height: 12,
+            height: 10,
           ),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),

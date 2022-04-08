@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:new_ui/components/button.dart';
 import 'package:new_ui/components/suggestions.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:new_ui/functions/func.dart';
 
 class ClassifyImage extends StatefulWidget {
   ClassifyImage({Key? key}) : super(key: key);
@@ -19,7 +20,8 @@ class ClassifyImage extends StatefulWidget {
 class _AddImageState extends State<ClassifyImage> {
   File? image;
   TextEditingController inputText = new TextEditingController();
-  TextEditingController recognizedMeal = new TextEditingController();
+  TextEditingController recognizedMeal =
+      new TextEditingController(text: "Tutaj pojawi się wynik");
   String modelOutput = 'Tutaj pojawi się wynik';
 
   Future pickImage(ImageSource source) async {
@@ -57,7 +59,10 @@ class _AddImageState extends State<ClassifyImage> {
 
       print(responseBody);
       //recognizedMeal.text = json.decode(response.body);
-      modelOutput = json.decode(response.body);
+      //modelOutput = json.decode(response.body);
+      setState(() {
+        modelOutput = json.decode(response.body);
+      });
       print(statusCode);
       print("OK");
     } on PlatformException catch (e) {
@@ -73,7 +78,7 @@ class _AddImageState extends State<ClassifyImage> {
       child: Column(
         children: [
           SizedBox(
-            height: 45,
+            height: smallSreen() ? 35 : 80,
           ),
           image != null
               ? ClipRRect(
@@ -87,7 +92,7 @@ class _AddImageState extends State<ClassifyImage> {
                 )
               : Image.asset('assets/diet.png', width: 200, height: 200),
           SizedBox(
-            height: 40,
+            height: smallSreen() ? 25 : 40,
           ),
           Text(modelOutput,
               style: GoogleFonts.comfortaa(
