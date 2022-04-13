@@ -39,7 +39,7 @@ class _AddImageState extends State<ClassifyImage> {
 
   Future categorizeThePhoto() async {
     try {
-      final uri = Uri.parse("https://gourmet.hopto.org:5000/classify");
+      final uri = Uri.parse("http://localhost:5000/classify");
       final headers = {'Content-Type': 'application/json'};
       final bytes = File(image!.path).readAsBytesSync();
       String base64Image = base64Encode(bytes);
